@@ -4,11 +4,9 @@ Bot de Telegram para la digitalización automática de actas de escrutinio elect
 
 ## Contexto y objetivo
 
-En una elección nacional, la información no solo tiene que ser correcta: también tiene que llegar antes de perder valor. Entre el cierre de la votación y la publicación de resultados se abre una ventana breve en la que los partidos políticos necesitan ordenar señales dispersas, interpretar tendencias y sostener decisiones internas con un grado razonable de confianza.
+Este trabajo explora la viabilidad de automatizar la digitalización de actas de escrutinio electoral en Argentina mediante modelos de reconocimiento de imágenes. El foco está puesto exclusivamente en la extracción de información a partir de fotos de actas, sin abarcar el análisis de resultados, la selección de mesas testigo ni la validación frente a datos oficiales.
 
-En la práctica, el circuito por el que esos datos se mueven sigue siendo artesanal: el fiscal partidario fotografía el acta y la envía por mensaje a un centro de cómputos interno, donde otras personas leen la imagen y transcriben manualmente los resultados. Esto genera pérdidas de tiempo, riesgo de error y uso intensivo de recursos.
-
-**El objetivo de esta tesis es determinar si resulta técnica y operativamente viable automatizar la carga de datos contenidos en las actas de mesas testigo de los partidos políticos a partir de imágenes.** Para ello se compararon herramientas de OCR tradicional y modelos de lenguaje multimodal, y se desarrolló este prototipo funcional que traslada esa capacidad técnica a una solución concreta.
+Para abordar el problema se compararon tres familias de modelos — OCR open source, OCR comerciales y modelos multimodales — evaluados sobre actas reales de procesos electorales recientes. A partir de esa comparación se seleccionó el modelo con mejor equilibrio entre precisión, tasa de error, velocidad y costo, y se lo integró en este prototipo funcional orientado a condiciones de uso real.
 
 ## Ejemplo de acta procesada
 
@@ -54,10 +52,9 @@ python main.py
 ```
 
 ## Variables de entorno
-
+ 
 | Variable | Descripción |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Token del bot obtenido desde @BotFather |
 | `GEMINI_API_KEY` | API Key de Google AI Studio |
 | `GOOGLE_SHEETS_ID` | ID de la planilla (en la URL de Sheets) |
-| `GOOGLE_CREDENTIALS_PATH` | Ruta al JSON de la service account |
