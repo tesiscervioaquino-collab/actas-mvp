@@ -10,7 +10,7 @@ Para abordar el problema se compararon tres familias de modelos — OCR open sou
 
 ## Ejemplo de acta procesada
 
-![Ejemplo de acta de escrutinio](acta_ejemplo.jpg)
+![Ejemplo de acta de escrutinio](assets/acta_ejemplo.jpg)
 
 ## Flujo del sistema
 
