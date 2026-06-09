@@ -34,6 +34,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for name, votes in zip(PARTY_NAMES, data["rows"]):
             if votes:
                 lines.append(f"{name}: {votes}")
+        lines.append(f"\n📤 Podés enviar la foto de la siguiente mesa cuando quieras.")            
 
         await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
