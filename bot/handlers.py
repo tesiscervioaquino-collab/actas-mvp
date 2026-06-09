@@ -48,5 +48,10 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"👋 Bot de carga de actas activo.\n\n"
         f"Enviá una foto del acta y los resultados se guardarán automáticamente en el Sheets:\n"
-        f"{SHEETS_URL}"
+        f"{SHEETS_URL}\n\n"
+        f"📸 Para mejores resultados, asegurate de que la foto cumpla con estas condiciones:\n\n"
+        f"• El acta debe estar completamente visible, sin cortes en los bordes\n"
+        f"• Buena iluminación y sin sombras sobre el texto\n"
+        f"• Imagen enfocada y sin movimiento\n\n"
+        f"Cuando estés listo, enviá la foto. ✅"
     )
