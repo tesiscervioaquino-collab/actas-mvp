@@ -2,13 +2,11 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from processing.image import preprocess
-from processing.gemini import extract_table, PARTY_NAMES
+from processing.gemini import extract_table
+from processing.constants import PARTY_NAMES
 from storage.sheets import write_results
-from config.settings import GOOGLE_SHEETS_ID
 
 logger = logging.getLogger(__name__)
-
-SHEETS_URL = f"https://docs.google.com/spreadsheets/d/{GOOGLE_SHEETS_ID}"
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -34,6 +32,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for name, votes in zip(PARTY_NAMES, data["rows"]):
             if votes:
                 lines.append(f"{name}: {votes}")
+        lines.append(f"\n📤 Podés enviar la foto de la siguiente mesa cuando quieras.")            
 
         await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
@@ -47,6 +46,10 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"/start recibido de user_id={update.effective_user.id}")
     await update.message.reply_text(
         f"👋 Bot de carga de actas activo.\n\n"
-        f"Enviá una foto del acta y los resultados se guardarán automáticamente en el Sheets:\n"
-        f"{SHEETS_URL}"
+        f"Enviá una foto del acta y los resultados se guardarán automáticamente.\n\n"
+        f"📸 Para mejores resultados, asegurate de que la foto cumpla con estas condiciones:\n\n"
+        f"• El acta debe estar completamente visible, sin cortes en los bordes\n"
+        f"• Buena iluminación y sin sombras sobre el texto\n"
+        f"• Imagen enfocada y sin movimiento\n\n"
+        f"Cuando estés listo, enviá la foto ✅"
     )
