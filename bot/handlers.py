@@ -1,6 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes
+from google.genai.errors import ServerError
 from processing.image import preprocess
 from processing.gemini import extract_table
 from processing.constants import PARTY_NAMES
@@ -36,10 +37,18 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
-    except Exception as e:
-        logger.error(f"Error procesando acta: {e}", exc_info=True)
+    except ServerError:
+        logger.error("Gemini no disponible (5xx)", exc_info=True)
         await update.message.reply_text(
-            f"❌ Error al procesar el acta: {str(e)}\n\nReintentá con una foto más clara."
+            "⚠️ El servicio de lectura está con mucha demanda y no pudo procesar el acta. "
+            "No es un problema con tu foto: esperá unos segundos y reenviala."
+        )
+
+    except Exception:
+        logger.error("Error procesando acta", exc_info=True)
+        await update.message.reply_text(
+            "❌ No se pudo procesar el acta. "
+            "Revisá que la foto esté completa, nítida y bien iluminada, y reintentá."
         )
 
 async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
