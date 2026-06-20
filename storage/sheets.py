@@ -2,46 +2,34 @@ import logging
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from config.settings import GOOGLE_SHEETS_ID, GOOGLE_CREDENTIALS_PATH
+from processing.constants import PARTY_NAMES
 
 logger = logging.getLogger(__name__)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-HEADERS = [
-    "CODIGO_MESA",
-    "ALIANZA LA LIBERTAD AVANZA",
-    "PARTIDO NUEVO BUENOS AIRES",
-    "LIBER.AR",
-    "FRENTE DE IZQUIERDA -UNIDAD-",
-    "FRENTE PATRIOTA FEDERAL",
-    "UNION LIBERAL",
-    "ALIANZA FUERZA PATRIA",
-    "COALICION CIVICA A.R.I",
-    "MOV. POL. SOC. Y CULTURAL PROYECTO SUR",
-    "PROPUESTA FEDERAL PARA EL CAMBIO",
-    "ALIANZA PROVINCIAS UNIDAS",
-    "ALIANZA POTENCIA",
-    "ALIANZA UNION FEDERAL",
-    "ALIANZA NUEVOS AIRES",
-    "MOVIMIENTO AVANZADA SOCIALISTA",
-    "TOTAL VOTOS AGRUPACIONES POLITICAS",
-    "VOTOS NULOS",
-    "VOTOS RECURRIDOS",
-    "VOTOS DE IDENTIDAD IMPUGNADA",
-    "VOTOS EN BLANCO",
-    "TOTAL DE VOTOS",
-]
+HEADERS = ["CODIGO_MESA"] + PARTY_NAMES
+
+# Resolved once and reused for the whole run.
+_service = None
+_sheet_name = None
+_headers_ready = False
 
 def _get_service():
-    creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_PATH, scopes=SCOPES)
-    return build("sheets", "v4", credentials=creds)
+    global _service
+    if _service is None:
+        creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_PATH, scopes=SCOPES)
+        _service = build("sheets", "v4", credentials=creds, cache_discovery=False)
+    return _service
 
 def _get_first_sheet_name(service):
-    """Get the actual name of the first sheet, regardless of language."""
-    meta = service.spreadsheets().get(spreadsheetId=GOOGLE_SHEETS_ID).execute()
-    name = meta["sheets"][0]["properties"]["title"]
-    logger.info(f"Nombre de hoja detectado: '{name}'")
-    return name
+    """Name of the first sheet, regardless of language. Cached after first call."""
+    global _sheet_name
+    if _sheet_name is None:
+        meta = service.spreadsheets().get(spreadsheetId=GOOGLE_SHEETS_ID).execute()
+        _sheet_name = meta["sheets"][0]["properties"]["title"]
+        logger.info(f"Nombre de hoja detectado: '{_sheet_name}'")
+    return _sheet_name
 
 def _format_header(service, sheet_name):
     """Bold the header row."""
@@ -66,6 +54,9 @@ def _format_header(service, sheet_name):
     ).execute()
 
 def ensure_headers(service, sheet_name):
+    global _headers_ready
+    if _headers_ready:
+        return
     result = service.spreadsheets().values().get(
         spreadsheetId=GOOGLE_SHEETS_ID,
         range=f"'{sheet_name}'!A1"
@@ -79,6 +70,7 @@ def ensure_headers(service, sheet_name):
         ).execute()
         _format_header(service, sheet_name)
         logger.info("Encabezados escritos y formateados")
+    _headers_ready = True
 
 def write_results(data: dict):
     service = _get_service()

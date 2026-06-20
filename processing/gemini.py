@@ -2,11 +2,20 @@ import json
 import base64
 import logging
 from google import genai
+from google.genai import types
 from config.settings import GEMINI_API_KEY
 
 logger = logging.getLogger(__name__)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Matches the configuration used in the model evaluation. The low thinking level
+# is deliberate: the default is noticeably slower for this task.
+GEN_CONFIG = types.GenerateContentConfig(
+    thinking_config=types.ThinkingConfig(thinking_level="low"),
+    temperature=0.1,
+    response_mime_type="application/json",
+)
 
 PROMPT = """
 Foto de un "Telegrama de Mesa" (acta electoral argentina) con layout fijo.
@@ -31,30 +40,6 @@ Devolver únicamente JSON válido con esta estructura, sin explicaciones ni text
 }
 """
 
-PARTY_NAMES = [
-    "ALIANZA LA LIBERTAD AVANZA",
-    "PARTIDO NUEVO BUENOS AIRES",
-    "LIBER.AR",
-    "FRENTE DE IZQUIERDA -UNIDAD-",
-    "FRENTE PATRIOTA FEDERAL",
-    "UNION LIBERAL",
-    "ALIANZA FUERZA PATRIA",
-    "COALICION CIVICA A.R.I",
-    "MOV. POL. SOC. Y CULTURAL PROYECTO SUR",
-    "PROPUESTA FEDERAL PARA EL CAMBIO",
-    "ALIANZA PROVINCIAS UNIDAS",
-    "ALIANZA POTENCIA",
-    "ALIANZA UNION FEDERAL",
-    "ALIANZA NUEVOS AIRES",
-    "MOVIMIENTO AVANZADA SOCIALISTA",
-    "TOTAL VOTOS AGRUPACIONES POLITICAS",
-    "VOTOS NULOS",
-    "VOTOS RECURRIDOS",
-    "VOTOS DE IDENTIDAD IMPUGNADA",
-    "VOTOS EN BLANCO",
-    "TOTAL DE VOTOS",
-]
-
 def extract_table(image_bytes: bytes) -> dict:
     logger.info("Enviando imagen a Gemini 3...")
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
@@ -66,16 +51,12 @@ def extract_table(image_bytes: bytes) -> dict:
                 {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
                 {"text": PROMPT}
             ]}
-        ]
+        ],
+        config=GEN_CONFIG
     )
 
     raw = response.text.strip()
     logger.info(f"Respuesta cruda de Gemini: {raw[:200]}")
-
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
 
     result = json.loads(raw)
     logger.info(f"Extracción exitosa — Mesa: {result.get('code')} | Filas: {len(result.get('rows', []))}")
